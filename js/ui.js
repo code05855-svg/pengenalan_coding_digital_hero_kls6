@@ -165,6 +165,12 @@ const DH_UI = (function () {
       btnConfirmCancel: $("btn-confirm-cancel"),
       btnConfirmOk: $("btn-confirm-ok"),
 
+      modalSeasonToken: $("modal-season-token"),
+      inputSeasonToken: $("input-season-token"),
+      seasonTokenError: $("season-token-error"),
+      btnSeasonTokenCancel: $("btn-season-token-cancel"),
+      btnSeasonTokenSubmit: $("btn-season-token-submit"),
+
       toast: $("toast"),
       confettiCanvas: $("confetti-canvas")
     };
@@ -187,13 +193,13 @@ const DH_UI = (function () {
   /* ---------------------------- MODAL UMUM ---------------------------- */
   function openModal(modalEl) {
     dom.modalOverlay.classList.remove("hidden");
-    [dom.modalName, dom.modalTutorial, dom.modalLesson, dom.modalResult, dom.modalConfirm].forEach(function (m) {
+    [dom.modalName, dom.modalTutorial, dom.modalLesson, dom.modalResult, dom.modalConfirm, dom.modalSeasonToken].forEach(function (m) {
       m.classList.toggle("hidden", m !== modalEl);
     });
   }
   function closeAllModals() {
     dom.modalOverlay.classList.add("hidden");
-    [dom.modalName, dom.modalTutorial, dom.modalLesson, dom.modalResult, dom.modalConfirm].forEach(function (m) {
+    [dom.modalName, dom.modalTutorial, dom.modalLesson, dom.modalResult, dom.modalConfirm, dom.modalSeasonToken].forEach(function (m) {
       m.classList.add("hidden");
     });
   }
@@ -207,6 +213,18 @@ const DH_UI = (function () {
       onConfirm();
     };
     dom.btnConfirmCancel.onclick = function () { closeAllModals(); };
+  }
+
+  function openSeasonTokenModal() {
+    dom.inputSeasonToken.value = "";
+    dom.seasonTokenError.classList.add("hidden");
+    openModal(dom.modalSeasonToken);
+    dom.inputSeasonToken.focus();
+  }
+  function showSeasonTokenError() {
+    dom.seasonTokenError.classList.remove("hidden");
+    dom.inputSeasonToken.value = "";
+    dom.inputSeasonToken.focus();
   }
 
   function showToast(message) {
@@ -289,8 +307,11 @@ const DH_UI = (function () {
   // seasonMeta: salah satu entri dari SEASONS (lihat data.js) — berisi
   // .id, .levels, .finalLevel, dst. Supaya Peta DigiLand bisa menampilkan
   // Season 1 ATAU Season 2 secara generik tanpa hardcode.
-  function renderMap(player, seasonMeta) {
+  function renderMap(player, seasonMeta, effectiveUnlockedLevel) {
     dom.mapPath.innerHTML = "";
+    if (effectiveUnlockedLevel === undefined || effectiveUnlockedLevel === null) {
+      effectiveUnlockedLevel = player.unlockedLevel;
+    }
 
     const mapBgPath = ASSET_PATHS.world[seasonMeta.mapBackgroundKey] || ASSET_PATHS.world.mapBackground;
     setBgVar(dom.mapHeroBanner, "--map-hero-image", mapBgPath);
@@ -309,7 +330,7 @@ const DH_UI = (function () {
 
     const allLevels = seasonMeta.levels.concat([seasonMeta.finalLevel]);
     allLevels.forEach(function (lv) {
-      const unlocked = player.unlockedLevel >= lv.id;
+      const unlocked = effectiveUnlockedLevel >= lv.id;
       const completed = !!(player.levelStars && player.levelStars[lv.id]);
       const btn = el("button", "map-node" + (unlocked ? " unlocked" : " locked") + (completed ? " completed" : "") + (lv.id === seasonMeta.finalLevel.id ? " node-final" : ""));
       btn.setAttribute("data-num", lv.id);
@@ -1152,6 +1173,8 @@ const DH_UI = (function () {
     openModal: openModal,
     closeAllModals: closeAllModals,
     showConfirm: showConfirm,
+    openSeasonTokenModal: openSeasonTokenModal,
+    showSeasonTokenError: showSeasonTokenError,
     showToast: showToast,
     setSoundIcon: setSoundIcon,
     applyTheme: applyTheme,

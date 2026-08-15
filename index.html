@@ -85,9 +85,7 @@
     <section id="screen-map" class="screen hidden">
       <div id="season-tabs" class="season-tabs">
         <button id="tab-season1" class="season-tab" data-season="1">Season 1</button>
-        <button id="tab-season2" class="season-tab" data-season="2">Season 2 
-        <span class="season-tab-lock">🔒</span>
-        </button>
+        <button id="tab-season2" class="season-tab" data-season="2">Season 2 <span class="season-tab-lock">🔒</span></button>
       </div>
       <div id="map-hero-banner" class="map-hero-banner"></div>
       <div class="map-heading">
@@ -188,6 +186,17 @@
       <div class="confirm-actions">
         <button id="btn-confirm-cancel" class="btn btn-ghost">Batal</button>
         <button id="btn-confirm-ok" class="btn btn-danger">Ya, Lanjutkan</button>
+      </div>
+    </div>
+
+    <div id="modal-season-token" class="modal hidden">
+      <h2>🔒 Season 2 Terkunci</h2>
+      <p>Selesaikan seluruh misi Season 1 untuk membuka Season 2 secara alami, atau masukkan kode akses di bawah ini jika kamu punya.</p>
+      <input id="input-season-token" type="text" placeholder="Masukkan kode akses...">
+      <p id="season-token-error" class="season-token-error hidden">Kode tidak valid, coba lagi.</p>
+      <div class="confirm-actions">
+        <button id="btn-season-token-cancel" class="btn btn-ghost">Batal</button>
+        <button id="btn-season-token-submit" class="btn btn-primary">Buka</button>
       </div>
     </div>
 

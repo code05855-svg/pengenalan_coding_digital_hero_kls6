@@ -26,6 +26,12 @@
 
   const STORAGE_KEY = "digitalHeroProgress";
 
+  // Kode akses rahasia untuk membuka Season 2 tanpa perlu menyelesaikan
+  // Season 1 dulu (mis. untuk keperluan demo/fasilitator). Tidak sensitif
+  // secara keamanan — game ini murni client-side, jadi anggap ini semacam
+  // "easter egg", bukan proteksi sungguhan.
+  const SEASON2_ACCESS_TOKEN = "codingcode";
+
   /* ---------------------------- PLAYER STATE ---------------------------- */
   let player = null;
   let dom = null;
@@ -40,6 +46,7 @@
       unlockedLevel: 1,    // level tertinggi yang boleh dimainkan (1-21)
       introSeen: false,    // prolog Season 1 sudah dilihat?
       story2Seen: false,   // prolog Season 2 sudah dilihat?
+      season2Unlocked: false, // dibuka lewat kode akses (di luar progress normal)?
       tutorialSeen: false,
       completedAt: null,
       settings: { sound: true, theme: "light" }
@@ -108,26 +115,69 @@
   let finalStageAttempts = [];
   let finalHintState = { used: 0 };
 
+  // Season 2 dianggap terbuka jika sudah selesai secara alami (Level 10
+  // tuntas) ATAU dibuka lewat kode akses.
+  function isSeason2Unlocked() {
+    return player.unlockedLevel > 10 || !!player.season2Unlocked;
+  }
+
+  // Menghitung "batas unlock" yang berlaku untuk Season tertentu. Ini
+  // TERPISAH dari player.unlockedLevel supaya kode akses Season 2 tidak
+  // ikut membuka misi Season 1 yang belum benar-benar dimainkan (progress
+  // tiap Season tetap independen — kode akses hanya jadi jalan pintas
+  // MASUK ke Season 2, bukan "buka semua sekaligus"). Dipakai nilai
+  // TERBESAR antara counter global (jalur alami) dan batas hasil hitung
+  // dari levelStars (jalur kode akses), supaya urutan mana pun yang
+  // ditempuh pemain (token dulu / alami dulu / bercampur) tetap konsisten
+  // dan progres yang sudah dicapai tidak pernah "mundur terkunci" lagi.
+  function computeEffectiveUnlockedLevel(seasonId) {
+    if (seasonId === 1) return player.unlockedLevel;
+    if (!isSeason2Unlocked()) return player.unlockedLevel; // Season 2 masih terkunci total
+    let frontier = 11;
+    for (let id = 11; id <= 20; id++) {
+      if (player.levelStars[id]) { frontier = id + 1; } else { break; }
+    }
+    return Math.max(player.unlockedLevel, frontier);
+  }
+
   function goToMap(seasonId) {
     if (seasonId) {
       currentMapSeason = seasonId;
     } else if (!currentMapSeason) {
-      currentMapSeason = player.unlockedLevel > 10 ? 2 : 1;
+      currentMapSeason = isSeason2Unlocked() ? 2 : 1;
     }
     DH_UI.updateStatbar(player);
-    const season2Unlocked = player.unlockedLevel > 10;
-    DH_UI.setSeasonTabs(currentMapSeason, season2Unlocked);
-    DH_UI.renderMap(player, getSeasonMeta(currentMapSeason));
+    DH_UI.setSeasonTabs(currentMapSeason, isSeason2Unlocked());
+    DH_UI.renderMap(player, getSeasonMeta(currentMapSeason), computeEffectiveUnlockedLevel(currentMapSeason));
     DH_UI.showScreen("map");
   }
 
   function switchMapSeason(seasonId) {
-    if (seasonId === 2 && player.unlockedLevel <= 10) {
-      DH_UI.showToast("Selesaikan Season 1 dulu untuk membuka Season 2, ya!");
+    if (seasonId === 2 && !isSeason2Unlocked()) {
+      DH_AUDIO.play("click");
+      DH_UI.openSeasonTokenModal();
       return;
     }
     DH_AUDIO.play("click");
     goToMap(seasonId);
+  }
+
+  // Dipanggil saat pemain mengirim kode akses di modal Season 2 terkunci.
+  function handleSeasonTokenSubmit() {
+    const entered = dom.inputSeasonToken.value.trim().toLowerCase();
+    if (entered === SEASON2_ACCESS_TOKEN) {
+      DH_AUDIO.play("success");
+      player.season2Unlocked = true;
+      // Sengaja TIDAK menaikkan player.unlockedLevel di sini — Level 11
+      // otomatis jadi bisa dimainkan lewat computeEffectiveUnlockedLevel()
+      // (memakai flag season2Unlocked), tanpa ikut membuka misi Season 1.
+      savePlayer();
+      DH_UI.closeAllModals();
+      handleContinueToSeason2();
+    } else {
+      DH_AUDIO.play("fail");
+      DH_UI.showSeasonTokenError();
+    }
   }
 
   function goToSeason1Ending() {
@@ -270,7 +320,13 @@
       player.xp += gainedXP;
       player.coins += gainedCoin;
       player.crystals += gainedCrystal;
-      player.unlockedLevel = Math.max(player.unlockedLevel, levelConfig.id + 1);
+      // Counter global unlockedLevel HANYA dinaikkan untuk progres Season 1,
+      // atau Season 2 yang sudah dicapai lewat jalur alami (Season 1 tuntas)
+      // — supaya progres Season 2 lewat kode akses tidak ikut membuka misi
+      // Season 1 yang belum dimainkan (lihat computeEffectiveUnlockedLevel).
+      if (levelConfig.id <= 10 || player.unlockedLevel > 10) {
+        player.unlockedLevel = Math.max(player.unlockedLevel, levelConfig.id + 1);
+      }
     }
     player.levelStars[levelConfig.id] = Math.max(player.levelStars[levelConfig.id] || 0, stars);
     savePlayer();
@@ -328,7 +384,12 @@
       player.xp += gainedXP;
       player.coins += gainedCoin;
       player.crystals += gainedCrystal;
-      player.unlockedLevel = Math.max(player.unlockedLevel, levelId + 1);
+      // Sama seperti handleLevelSuccess: jangan naikkan counter global untuk
+      // Final Challenge Season 2 yang dicapai lewat kode akses (Season 1
+      // belum tuntas) — supaya Season 1 tidak ikut terbuka semua.
+      if (levelId <= 10 || player.unlockedLevel > 10) {
+        player.unlockedLevel = Math.max(player.unlockedLevel, levelId + 1);
+      }
       if (levelId === 20) player.completedAt = Date.now();
     }
     player.levelStars[levelId] = Math.max(player.levelStars[levelId] || 0, stars);
@@ -453,6 +514,15 @@
 
     dom.tabSeason1.addEventListener("click", function () { switchMapSeason(1); });
     dom.tabSeason2.addEventListener("click", function () { switchMapSeason(2); });
+
+    dom.btnSeasonTokenSubmit.addEventListener("click", handleSeasonTokenSubmit);
+    dom.btnSeasonTokenCancel.addEventListener("click", function () {
+      DH_AUDIO.play("click");
+      DH_UI.closeAllModals();
+    });
+    dom.inputSeasonToken.addEventListener("keydown", function (e) {
+      if (e.key === "Enter") handleSeasonTokenSubmit();
+    });
 
     DH_UI.renderMap.onSelectLevel = openLevel;
   }

@@ -63,6 +63,23 @@ Anda cuma mau ubah soal atau teks cerita, Anda **hanya perlu membuka
 
 > Browser yang direkomendasikan: Chrome, Edge, atau Firefox versi terbaru.
 
+### Kode Akses Season 2 (jalan pintas untuk demo/fasilitator)
+
+Season 2 normalnya terbuka setelah pemain menyelesaikan Final Challenge
+Season 1 (Level 10). Jika Anda perlu langsung mendemokan Season 2 tanpa
+bermain Season 1 dulu (mis. saat presentasi ke guru/panitia), klik tab
+**"Season 2"** yang masih terkunci di Peta DigiLand, lalu masukkan kode:
+
+```
+codingcode
+```
+
+Progress Season 1 pemain TIDAK ikut terbuka oleh kode ini — hanya Season 2
+yang jadi bisa diakses, dan levelnya tetap terbuka satu per satu seperti
+biasa (Level 12 baru terbuka setelah Level 11 selesai, dst). Untuk
+mengganti kode ini, buka `js/game.js` dan cari konstanta
+`SEASON2_ACCESS_TOKEN` di bagian atas file.
+
 ---
 
 ## 3. Cara Mengubah Soal / Level
@@ -298,6 +315,12 @@ Gunakan daftar ini untuk memastikan game siap dipakai:
 - [ ] Coba tab **Season 1** / **Season 2** di atas Peta DigiLand —
       pastikan bisa berpindah bebas antar Season yang SUDAH terbuka
       (Season 2 tidak bisa dibuka sebelum Level 10 selesai).
+- [ ] Klik tab **Season 2** saat masih terkunci — pastikan muncul modal
+      kode akses (bukan cuma pesan biasa). Coba masukkan kode SALAH dulu
+      (pastikan muncul pesan error), lalu masukkan `codingcode` (pastikan
+      berhasil masuk ke prolog Season 2, DAN Season 1 tetap terkunci
+      seperti semula — cek tab Season 1, harus masih Level 1 saja yang
+      terbuka).
 - [ ] Mainkan Level 11–19 satu per satu, termasuk Level 13 (Nested Loop
       Lab, blok REPEAT di dalam REPEAT) dan Level 15 (Bug Swarm, ada 2
       blok yang salah sekaligus).
