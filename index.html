@@ -1,0 +1,206 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1, user-scalable=no">
+<title>Digital Hero — Bermain, Berpikir, dan Mengenal Dunia Digital</title>
+<meta name="description" content="Game edukasi coding dasar & literasi digital untuk siswa SD kelas 6.">
+<link rel="stylesheet" href="css/style.css">
+<!-- TODO-ASET: jika ingin memakai favicon, tambahkan <link rel="icon" href="assets/images/favicon.png"> -->
+</head>
+<body>
+
+<canvas id="confetti-canvas" aria-hidden="true"></canvas>
+
+<div id="app">
+
+  <!-- ============== TOP BAR (selalu tampil) ============== -->
+  <header id="topbar">
+  <button id="btn-back" class="icon-btn hidden" aria-label="Kembali" title="Kembali">
+    <svg viewBox="0 0 24 24" width="22" height="22">
+      <path d="M15 4L7 12L15 20" stroke="currentColor" stroke-width="2.5" fill="none" stroke-linecap="round" stroke-linejoin="round"/>
+    </svg>
+  </button>
+  
+  <div id="topbar-title">
+    <span class="logo-mark">
+      <img src="assets/images/items/logo.png" alt="Digital Hero Logo" class="logo-img" width="32" height="32" onerror="this.style.display='none';this.nextElementSibling.style.display='';">
+      <span class="logo-fallback-emoji" style="display:none">💠</span>
+    </span>
+    <span class="logo-text">DIGITAL HERO</span>
+  </div>
+  
+  <div class="topbar-actions">
+    <button id="btn-sound" class="icon-btn" aria-label="Suara" title="Suara ON/OFF">🔊</button>
+    <button id="btn-theme" class="icon-btn" aria-label="Tema" title="Ganti Tema">🌙</button>
+    <button id="btn-fullscreen" class="icon-btn" aria-label="Layar Penuh" title="Layar Penuh">⛶</button>
+  </div>
+</header>
+
+  <!-- ============== STAT BAR (tampil di map & level) ============== -->
+  <div id="statbar" class="hidden">
+    <span class="stat" title="Nama Pemain"><span class="stat-icon asset-slot"><img class="asset-slot-img" src="assets/images/characters/digi.png" alt="" onerror="this.style.display='none';this.nextElementSibling.style.display='';"><span class="asset-slot-fallback" style="display:none">🧑‍🚀</span></span><span id="stat-player-name">Digi</span></span>
+    <span class="stat" title="Experience Point"><span class="stat-icon asset-slot"><img class="asset-slot-img" src="assets/images/icons/star-filled.png" alt="" onerror="this.style.display='none';this.nextElementSibling.style.display='';"><span class="asset-slot-fallback" style="display:none">⭐</span></span><span id="stat-xp">0</span> XP</span>
+    <span class="stat" title="Coin"><span class="stat-icon asset-slot"><img class="asset-slot-img" src="assets/images/items/coin.png" alt="" onerror="this.style.display='none';this.nextElementSibling.style.display='';"><span class="asset-slot-fallback" style="display:none">🪙</span></span><span id="stat-coin">0</span></span>
+    <span class="stat" title="Digital Crystal"><span class="stat-icon asset-slot"><img class="asset-slot-img" src="assets/images/items/crystal.png" alt="" onerror="this.style.display='none';this.nextElementSibling.style.display='';"><span class="asset-slot-fallback" style="display:none">💎</span></span><span id="stat-crystal">0</span>/20</span>
+  </div>
+
+  <main id="main-content">
+
+    <!-- ============== LANDING / MAIN MENU ============== -->
+    <section id="screen-landing" class="screen">
+      <div class="landing-card">
+        <div class="landing-hero">
+          <div class="hero-emoji asset-slot" id="landing-hero-logo" aria-hidden="true"><img class="asset-slot-img" src="assets/images/items/logo.png" alt="" onerror="this.style.display='none';this.nextElementSibling.style.display='';"><span class="asset-slot-fallback" style="display:none">💠</span></div>
+          <h1>DIGITAL HERO</h1>
+          <p class="landing-tagline">Bermain, Berpikir, dan Mengenal Dunia Digital</p>
+        </div>
+        <p id="landing-save-info" class="landing-save-info hidden"></p>
+        <div class="landing-buttons">
+          <button id="btn-start-game" class="btn btn-primary btn-big">Mulai Petualangan</button>
+          <button id="btn-how-to-play" class="btn btn-secondary btn-big">Aturan Bermain</button>
+          <button id="btn-reset-progress" class="btn btn-ghost btn-small">Reset Progress</button>
+        </div>
+      </div>
+    </section>
+
+    <!-- ============== STORY INTRO ============== -->
+    <section id="screen-story" class="screen hidden">
+      <div class="story-wrap">
+        <div id="story-dialogue-box" class="dialogue-box">
+          <div class="dialogue-portrait" id="story-portrait">🤖</div>
+          <div class="dialogue-content">
+            <div class="dialogue-name" id="story-speaker-name">Byte</div>
+            <p class="dialogue-text" id="story-speaker-text">...</p>
+          </div>
+        </div>
+        <div class="story-actions">
+          <button id="btn-story-skip" class="btn btn-ghost btn-small">Lewati</button>
+          <button id="btn-story-next" class="btn btn-primary">Lanjut ▶</button>
+        </div>
+      </div>
+    </section>
+
+    <!-- ============== WORLD MAP ============== -->
+    <section id="screen-map" class="screen hidden">
+      <div id="season-tabs" class="season-tabs">
+        <button id="tab-season1" class="season-tab" data-season="1">Season 1</button>
+        <button id="tab-season2" class="season-tab" data-season="2">Season 2 
+        <span class="season-tab-lock">🔒</span>
+        </button>
+      </div>
+      <div id="map-hero-banner" class="map-hero-banner"></div>
+      <div class="map-heading">
+        <h2 id="map-heading-title">Peta DigiLand</h2>
+        <p id="map-heading-sub">Selesaikan misi secara berurutan untuk memulihkan Core. Ayo ambil bagian untuk menyelamatkan DigiLand!</p>
+      </div>
+      <div id="map-path" class="map-path"><!-- diisi JS: node level sesuai season aktif --></div>
+    </section>
+
+    <!-- ============== LEVEL / GAME SCREEN ============== -->
+    <section id="screen-level" class="screen hidden">
+      <div id="level-header">
+        <div class="level-header-top">
+          <span id="level-icon" class="level-icon">🚀</span>
+          <div class="level-header-text">
+            <h2 id="level-title">Judul Level</h2>
+            <span id="level-concept-badge" class="concept-badge">Konsep</span>
+          </div>
+          <div id="stage-progress" class="stage-progress hidden"></div>
+        </div>
+        <p id="level-byte-tip" class="byte-tip"><span id="level-byte-tip-icon" class="byte-tip-icon"></span> <span id="level-byte-tip-text"></span></p>
+      </div>
+      <div id="level-stage" class="level-stage"><!-- diisi JS sesuai tipe level --></div>
+    </section>
+
+    <!-- ============== ENDING / SERTIFIKAT ============== -->
+    <section id="screen-ending" class="screen hidden">
+      <div class="ending-wrap">
+        <div class="ending-story" id="ending-story"></div>
+        <div id="certificate-card" class="certificate-card">
+          <div class="certificate-border">
+            <div class="certificate-badge" id="cert-badge-slot"></div>
+            <h2 id="cert-heading">SERTIFIKAT DIGITAL HERO</h2>
+            <p class="certificate-sub" id="cert-subheading">Diberikan kepada</p>
+            <p class="certificate-name" id="cert-player-name">Nama Pemain</p>
+            <p class="certificate-body" id="cert-body">...</p>
+            <div class="certificate-stats">
+              <span>⭐ <span id="cert-xp">0</span> XP</span>
+              <span>💎 <span id="cert-crystal">10</span>/<span id="cert-crystal-max">10</span> Crystal</span>
+              <span>🌟 <span id="cert-stars">0</span>/<span id="cert-stars-max">30</span> Stars</span>
+            </div>
+            <p class="certificate-footer" id="cert-footer">DIGITAL HERO</p>
+          </div>
+        </div>
+        <div class="ending-actions">
+          <button id="btn-continue-season2" class="btn btn-primary btn-big hidden">Lanjutkan ke Season 2 ➡️</button>
+          <button id="btn-print-certificate" class="btn btn-secondary">Cetak Sertifikat</button>
+          <button id="btn-play-again" class="btn btn-ghost">Main Lagi dari Awal</button>
+        </div>
+      </div>
+    </section>
+
+  </main>
+
+  <!-- ============== MODALS ============== -->
+  <div id="modal-overlay" class="modal-overlay hidden">
+
+    <div id="modal-name" class="modal hidden">
+      <h2>Siapa Namamu, Digital Hero?</h2>
+      <p>Byte ingin tahu nama pemberani yang akan menyelamatkan DigiLand!</p>
+      <input id="input-player-name" type="text" maxlength="18" placeholder="Tulis namamu di sini...">
+      <button id="btn-confirm-name" class="btn btn-primary btn-big">Mulai Petualangan 🚀</button>
+    </div>
+
+    <div id="modal-tutorial" class="modal modal-wide hidden">
+      <h2>📘 Cara Bermain</h2>
+      <div id="tutorial-steps" class="tutorial-steps"><!-- diisi JS --></div>
+      <button id="btn-close-tutorial" class="btn btn-primary btn-big">Mengerti!</button>
+    </div>
+
+    <div id="modal-lesson" class="modal hidden">
+      <div class="lesson-portrait" id="lesson-portrait">🤖</div>
+      <span class="concept-badge" id="lesson-concept-badge">Konsep</span>
+      <h2 id="lesson-title">Judul Level</h2>
+      <p class="lesson-story" id="lesson-story">Cerita...</p>
+      <div class="lesson-box">
+        <strong>Materi Singkat</strong>
+        <p id="lesson-text">Materi...</p>
+      </div>
+      <button id="btn-start-level" class="btn btn-primary btn-big">Mulai Tantangan ▶</button>
+    </div>
+
+    <div id="modal-result" class="modal hidden">
+      <div class="result-stars" id="result-stars">⭐⭐⭐</div>
+      <h2 id="result-title">Misi Selesai!</h2>
+      <p id="result-subtitle">Kerja bagus, Digital Hero!</p>
+      <div class="result-rewards">
+        <span>⭐ +<span id="result-xp">0</span> XP</span>
+        <span>🪙 +<span id="result-coin">0</span></span>
+        <span>💎 +<span id="result-crystal">1</span></span>
+      </div>
+      <button id="btn-result-continue" class="btn btn-primary btn-big">Lanjutkan</button>
+    </div>
+
+    <div id="modal-confirm" class="modal hidden">
+      <h2 id="confirm-title">Yakin?</h2>
+      <p id="confirm-text">Apakah kamu yakin?</p>
+      <div class="confirm-actions">
+        <button id="btn-confirm-cancel" class="btn btn-ghost">Batal</button>
+        <button id="btn-confirm-ok" class="btn btn-danger">Ya, Lanjutkan</button>
+      </div>
+    </div>
+
+  </div>
+
+  <div id="toast" class="toast hidden"></div>
+
+</div>
+
+<script src="js/data.js"></script>
+<script src="js/engine.js"></script>
+<script src="js/audio.js"></script>
+<script src="js/ui.js"></script>
+<script src="js/game.js"></script>
+</body>
+</html>
